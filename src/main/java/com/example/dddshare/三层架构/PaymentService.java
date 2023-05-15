@@ -29,10 +29,8 @@ public class PaymentService {
             throw new InvalidOperException();
         }
         // 5. 计算新值，并更新
-        BigDecimal newSource = myAccount.getAmount().subtract(amount);
-        BigDecimal newTarget = storeAccount.getAmount().add(amount);
-        myAccount.setAmount(newSource);
-        storeAccount.setAmount(newTarget);
+        myAccount.withdraw(amount);
+        storeAccount.deposit(amount);
         // 6. 更新到数据库
         accountDao.update(myAccount);
         accountDao.update(storeAccount);
