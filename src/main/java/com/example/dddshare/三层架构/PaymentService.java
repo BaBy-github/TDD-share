@@ -3,7 +3,6 @@ package com.example.dddshare.三层架构;
 import com.example.dddshare.mock.InvalidOperException;
 import com.example.dddshare.mock.KafkaTemplate;
 import com.example.dddshare.mock.NoMoneyException;
-import com.example.dddshare.mock.RiskCheckService;
 
 import java.math.BigDecimal;
 
@@ -12,7 +11,7 @@ import static com.example.dddshare.mock.KafkaTemplate.TOPIC_AUDIT_LOG;
 public class PaymentService {
     private AccountRepository accountRepository;
     private KafkaTemplate kafkaTemplate;
-    private RiskCheckService riskCheckService;
+    private BizSafeService bizSafeService;
 
     public boolean pay(String userId, String storeAccountId, BigDecimal amount) throws NoMoneyException, InvalidOperException {
         // 1．从数据库读取数据
@@ -23,9 +22,7 @@ public class PaymentService {
             throw new NoMoneyException();
         }
         // 3. 调用风控微服务
-        String riskCode = riskCheckService.checkPayment(userId, storeAccountId, amount);
-        // 4. 检查交易合法性
-        if (!"0000".equals(riskCode)) {
+        if(!bizSafeService.checkBizSafe(userId, storeAccountId, amount)) {
             throw new InvalidOperException();
         }
         // 5. 计算新值，并更新
