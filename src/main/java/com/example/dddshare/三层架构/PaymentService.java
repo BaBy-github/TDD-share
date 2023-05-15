@@ -10,14 +10,14 @@ import java.math.BigDecimal;
 import static com.example.dddshare.mock.KafkaTemplate.TOPIC_AUDIT_LOG;
 
 public class PaymentService {
-    private AccountDao accountDao;
+    private AccountRepository accountRepository;
     private KafkaTemplate kafkaTemplate;
     private RiskCheckService riskCheckService;
 
     public boolean pay(String userId, String storeAccountId, BigDecimal amount) throws NoMoneyException, InvalidOperException {
         // 1．从数据库读取数据
-        AccountEntity myAccount = accountDao.findByUserId(userId);
-        AccountEntity storeAccount = accountDao.findByMerchantAccountId(storeAccountId);
+        Account myAccount = accountRepository.find(userId);
+        Account storeAccount = accountRepository.find(storeAccountId);
         // 2．业务参数校验
         if (amount.compareTo(myAccount.getAmount()) > 0) {
             throw new NoMoneyException();
@@ -32,8 +32,8 @@ public class PaymentService {
         myAccount.withdraw(amount);
         storeAccount.deposit(amount);
         // 6. 更新到数据库
-        accountDao.update(myAccount);
-        accountDao.update(storeAccount);
+        accountRepository.save(myAccount);
+        accountRepository.save(storeAccount);
         // 7. 发送审计消息
         String message = myAccount.getId() + "," + storeAccount.getId() + "," + amount;
         kafkaTemplate.send(TOPIC_AUDIT_LOG, message);

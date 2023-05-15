@@ -6,11 +6,15 @@ public class AccountDao {
         return null;
     }
 
-    public AccountEntity findByMerchantAccountId(String merchantAccountId) {
+    public AccountEntity findByStoreAccountId(String storeAccountId) {
         return null;
     }
 
-    public void update(AccountEntity clientEntity) {
+    public void update(AccountEntity accountEntity) {
+
+    }
+
+    public void insert(AccountEntity accountEntity) {
 
     }
 }
