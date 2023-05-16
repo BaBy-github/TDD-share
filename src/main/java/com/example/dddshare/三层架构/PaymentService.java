@@ -1,16 +1,13 @@
 package com.example.dddshare.三层架构;
 
 import com.example.dddshare.mock.InvalidOperException;
-import com.example.dddshare.mock.KafkaTemplate;
 import com.example.dddshare.mock.NoMoneyException;
 
 import java.math.BigDecimal;
 
-import static com.example.dddshare.mock.KafkaTemplate.TOPIC_AUDIT_LOG;
-
 public class PaymentService {
     private AccountRepository accountRepository;
-    private KafkaTemplate kafkaTemplate;
+    private AuditMessageProducer auditMessageProducer;
     private BizSafeService bizSafeService;
 
     public boolean pay(String userId, String storeAccountId, BigDecimal amount) throws NoMoneyException, InvalidOperException {
@@ -22,7 +19,7 @@ public class PaymentService {
             throw new NoMoneyException();
         }
         // 3. 调用风控微服务
-        if(!bizSafeService.checkBizSafe(userId, storeAccountId, amount)) {
+        if (!bizSafeService.checkBizSafe(userId, storeAccountId, amount)) {
             throw new InvalidOperException();
         }
         // 5. 计算新值，并更新
@@ -32,8 +29,11 @@ public class PaymentService {
         accountRepository.save(myAccount);
         accountRepository.save(storeAccount);
         // 7. 发送审计消息
-        String message = myAccount.getId() + "," + storeAccount.getId() + "," + amount;
-        kafkaTemplate.send(TOPIC_AUDIT_LOG, message);
+        auditMessageProducer.send(AuditMessage.builder()
+                .userId(userId)
+                .storeAccountId(storeAccountId)
+                .amount(amount)
+                .build());
         return true;
     }
 }
