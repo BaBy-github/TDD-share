@@ -9,6 +9,7 @@ public class PaymentService {
     private AccountRepository accountRepository;
     private AuditMessageProducer auditMessageProducer;
     private BizSafeService bizSafeService;
+    private AccountTransferService accountTransferService;
 
     public boolean pay(String userId, String storeAccountId, BigDecimal amount) throws NoMoneyException, InvalidOperException {
         // 1．从数据库读取数据
@@ -23,8 +24,7 @@ public class PaymentService {
             throw new InvalidOperException();
         }
         // 5. 计算新值，并更新
-        myAccount.withdraw(amount);
-        storeAccount.deposit(amount);
+        accountTransferService.transfer(myAccount, storeAccount, amount);
         // 6. 更新到数据库
         accountRepository.save(myAccount);
         accountRepository.save(storeAccount);
