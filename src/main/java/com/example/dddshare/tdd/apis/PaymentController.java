@@ -1,7 +1,8 @@
-package com.example.dddshare.三层架构;
+package com.example.dddshare.tdd.apis;
 
-import com.example.dddshare.mock.InvalidOperException;
-import com.example.dddshare.mock.NoMoneyException;
+import com.example.dddshare.tdd.application.PaymentService;
+import com.example.dddshare.tdd.common.exception.InvalidOperException;
+import com.example.dddshare.tdd.common.exception.NoMoneyException;
 
 import java.math.BigDecimal;
 

@@ -1,4 +1,4 @@
-package com.example.dddshare.三层架构;
+package com.example.dddshare.tdd.infrastructure.persistent;
 
 public class AccountDao {
 

@@ -1,6 +1,6 @@
-package com.example.dddshare.DDD四层架构.domain;
+package com.example.dddshare.tdd.domain;
 
-import com.example.dddshare.DDD四层架构.infrastructure.persistent.AccountEntity;
+import com.example.dddshare.tdd.infrastructure.persistent.AccountEntity;
 import lombok.Builder;
 import lombok.Data;
 

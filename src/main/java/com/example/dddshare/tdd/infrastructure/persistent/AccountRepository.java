@@ -1,6 +1,6 @@
-package com.example.dddshare.DDD四层架构.infrastructure.persistent;
+package com.example.dddshare.tdd.infrastructure.persistent;
 
-import com.example.dddshare.DDD四层架构.domain.Account;
+import com.example.dddshare.tdd.domain.Account;
 
 public class AccountRepository {
     private AccountDao accountDao;

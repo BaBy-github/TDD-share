@@ -1,4 +1,4 @@
-package com.example.dddshare.三层架构;
+package com.example.dddshare.tdd.infrastructure.audit;
 
 import lombok.Builder;
 import lombok.Data;

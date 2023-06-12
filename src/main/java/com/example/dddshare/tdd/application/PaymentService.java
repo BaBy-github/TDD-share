@@ -1,13 +1,13 @@
-package com.example.dddshare.DDD四层架构.application;
+package com.example.dddshare.tdd.application;
 
-import com.example.dddshare.DDD四层架构.acl.BizSafeService;
-import com.example.dddshare.DDD四层架构.infrastructure.audit.AuditMessage;
-import com.example.dddshare.DDD四层架构.domain.Account;
-import com.example.dddshare.DDD四层架构.domain.AccountTransferService;
-import com.example.dddshare.DDD四层架构.infrastructure.persistent.AccountRepository;
-import com.example.dddshare.DDD四层架构.infrastructure.audit.AuditMessageProducer;
-import com.example.dddshare.DDD四层架构.common.exception.InvalidOperException;
-import com.example.dddshare.DDD四层架构.common.exception.NoMoneyException;
+import com.example.dddshare.tdd.acl.BizSafeService;
+import com.example.dddshare.tdd.infrastructure.audit.AuditMessage;
+import com.example.dddshare.tdd.domain.Account;
+import com.example.dddshare.tdd.domain.AccountTransferService;
+import com.example.dddshare.tdd.infrastructure.persistent.AccountRepository;
+import com.example.dddshare.tdd.infrastructure.audit.AuditMessageProducer;
+import com.example.dddshare.tdd.common.exception.InvalidOperException;
+import com.example.dddshare.tdd.common.exception.NoMoneyException;
 
 import java.math.BigDecimal;
 
