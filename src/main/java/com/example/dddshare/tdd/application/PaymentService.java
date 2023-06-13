@@ -7,12 +7,15 @@ import com.example.dddshare.tdd.common.exception.InvalidOperException;
 import com.example.dddshare.tdd.common.exception.NoMoneyException;
 import com.example.dddshare.tdd.domain.Account;
 import com.example.dddshare.tdd.domain.AccountTransferService;
+import com.example.dddshare.tdd.infrastructure.audit.AuditMessage;
+import com.example.dddshare.tdd.infrastructure.audit.AuditMessageProducer;
 import com.example.dddshare.tdd.infrastructure.persistent.AccountRepository;
 
 public class PaymentService {
     private AccountRepository accountRepository;
     private AccountTransferService accountTransferService;
     private BizSafeService bizSafeService;
+    private AuditMessageProducer auditMessageProducer;
 
     public boolean pay(String userId, String storeAccountId, BigDecimal amount) throws NoMoneyException, InvalidOperException {
         // 从数据库读取数据
@@ -34,6 +37,12 @@ public class PaymentService {
         accountRepository.save(myAccount);
         accountRepository.save(storeAccount);
 
+        // 发送审计消息
+        auditMessageProducer.send(AuditMessage.builder()
+                .userId(userId)
+                .storeAccountId(storeAccountId)
+                .amount(amount)
+                .build());
         return true;
     }
 }

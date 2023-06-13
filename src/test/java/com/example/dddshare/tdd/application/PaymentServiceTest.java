@@ -5,6 +5,8 @@ import com.example.dddshare.tdd.common.exception.InvalidOperException;
 import com.example.dddshare.tdd.common.exception.NoMoneyException;
 import com.example.dddshare.tdd.domain.Account;
 import com.example.dddshare.tdd.domain.AccountTransferService;
+import com.example.dddshare.tdd.infrastructure.audit.AuditMessage;
+import com.example.dddshare.tdd.infrastructure.audit.AuditMessageProducer;
 import com.example.dddshare.tdd.infrastructure.persistent.AccountRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +30,8 @@ class PaymentServiceTest {
     private AccountTransferService accountTransferService;
     @Mock
     private BizSafeService bizSafeService;
+    @Mock
+    private AuditMessageProducer auditMessageProducer;
 
     @Test
     void shouldReturnTrue_whenTransferSuccess_givenUserIdAndStoreAccountIdAndAmount() throws InvalidOperException, NoMoneyException {
@@ -50,6 +54,7 @@ class PaymentServiceTest {
         // Mock void method
         doNothing().when(accountTransferService).transfer(myAccountFormDB, storeAccountFormDB, transferAmount);
         when(bizSafeService.checkBizSafe(userId, storeAccountId, transferAmount)).thenReturn(true);
+        when(auditMessageProducer.send(any())).thenReturn(true);
 
         boolean result = paymentService.pay(userId, storeAccountId, transferAmount);
         // then
@@ -60,7 +65,8 @@ class PaymentServiceTest {
                 () -> assertDoesNotThrow(() -> NoMoneyException.class),
                 () -> verify(accountTransferService, times(1)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
                 () -> verify(accountRepository, times(1)).save(myAccountFormDB),
-                () -> verify(accountRepository, times(1)).save(storeAccountFormDB)
+                () -> verify(accountRepository, times(1)).save(storeAccountFormDB),
+                () -> verify(auditMessageProducer, times(1)).send(isA(AuditMessage.class))
         );
     }
 
@@ -91,7 +97,8 @@ class PaymentServiceTest {
                 () -> assertDoesNotThrow(() -> InvalidOperException.class),
                 () -> verify(accountTransferService, times(0)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
                 () -> verify(accountRepository, times(0)).save(myAccountFormDB),
-                () -> verify(accountRepository, times(0)).save(storeAccountFormDB)
+                () -> verify(accountRepository, times(0)).save(storeAccountFormDB),
+                () -> verify(auditMessageProducer, times(0)).send(any())
         );
     }
 
@@ -117,7 +124,8 @@ class PaymentServiceTest {
                 () -> assertDoesNotThrow(() -> NoMoneyException.class),
                 () -> verify(accountTransferService, times(0)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
                 () -> verify(accountRepository, times(0)).save(myAccountFormDB),
-                () -> verify(accountRepository, times(0)).save(storeAccountFormDB)
+                () -> verify(accountRepository, times(0)).save(storeAccountFormDB),
+                () -> verify(auditMessageProducer, times(0)).send(any())
         );
     }
 }
