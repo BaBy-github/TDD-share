@@ -123,9 +123,8 @@ class PaymentServiceTest {
                 () -> verify(accountRepository, times(1)).find(userId),
                 () -> verify(accountRepository, times(1)).find(storeAccountId),
                 () -> assertDoesNotThrow(() -> InvalidOperException.class),
-                () -> verify(accountTransferService, times(0)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
-                () -> verify(accountRepository, times(0)).save(myAccountFormDB),
-                () -> verify(accountRepository, times(0)).save(storeAccountFormDB),
+                () -> verify(accountTransferService, times(0)).transfer(any(), any(), any()),
+                () -> verify(accountRepository, times(0)).save(any()),
                 () -> verify(auditMessageProducer, times(0)).send(any())
         );
     }
@@ -144,9 +143,8 @@ class PaymentServiceTest {
                 () -> verify(accountRepository, times(1)).find(userId),
                 () -> verify(accountRepository, times(1)).find(storeAccountId),
                 () -> assertDoesNotThrow(() -> NoMoneyException.class),
-                () -> verify(accountTransferService, times(0)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
-                () -> verify(accountRepository, times(0)).save(myAccountFormDB),
-                () -> verify(accountRepository, times(0)).save(storeAccountFormDB),
+                () -> verify(accountTransferService, times(0)).transfer(any(), any(), any()),
+                () -> verify(accountRepository, times(0)).save(any()),
                 () -> verify(auditMessageProducer, times(0)).send(any())
         );
     }
