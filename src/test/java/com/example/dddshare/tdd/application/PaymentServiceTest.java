@@ -14,8 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class) // 自动初始化@Mock注释的对象
 class PaymentServiceTest {
@@ -49,6 +51,13 @@ class PaymentServiceTest {
 
         boolean result = paymentService.pay(userId, storeAccountId, transferAmount);
         // then
-        assertThat(result).isEqualTo(true);
+        assertAll(
+                () -> assertThat(result).isEqualTo(true),
+                () -> verify(accountRepository, times(1)).find(userId),
+                () -> verify(accountRepository, times(1)).find(storeAccountId),
+                () -> verify(accountTransferService, times(1)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
+                () -> verify(accountRepository, times(1)).save(myAccountFormDB),
+                () -> verify(accountRepository, times(1)).save(storeAccountFormDB)
+        );
     }
 }
