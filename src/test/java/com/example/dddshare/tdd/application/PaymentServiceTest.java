@@ -26,6 +26,8 @@ class PaymentServiceTest {
     private AccountRepository accountRepository;
     @Mock
     private AccountTransferService accountTransferService;
+    @Mock
+    private BizSafeService bizSafeService;
 
     @Test
     void shouldReturnTrue_whenTransferSuccess_givenUserIdAndStoreAccountIdAndAmount() throws InvalidOperException, NoMoneyException {
@@ -47,6 +49,7 @@ class PaymentServiceTest {
         when(accountRepository.find(storeAccountId)).thenReturn(storeAccountFormDB);
         // Mock void method
         doNothing().when(accountTransferService).transfer(myAccountFormDB, storeAccountFormDB, transferAmount);
+        when(bizSafeService.checkBizSafe(userId, storeAccountId, transferAmount)).thenReturn(true);
 
         boolean result = paymentService.pay(userId, storeAccountId, transferAmount);
         // then
@@ -85,6 +88,33 @@ class PaymentServiceTest {
         assertAll(
                 () -> verify(accountRepository, times(1)).find(userId),
                 () -> verify(accountRepository, times(1)).find(storeAccountId),
+                () -> assertDoesNotThrow(() -> InvalidOperException.class),
+                () -> verify(accountTransferService, times(0)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
+                () -> verify(accountRepository, times(0)).save(myAccountFormDB),
+                () -> verify(accountRepository, times(0)).save(storeAccountFormDB)
+        );
+    }
+
+    @Test
+    void shouldThrowInvalidOperException_whenTransferNotSafe_givenUserAccountNotEnoughMoney() throws InvalidOperException, NoMoneyException {
+        // given
+        String userId = "1";
+        String storeAccountId = "2";
+        BigDecimal transferAmount = BigDecimal.valueOf(300);
+
+        // when
+        Account myAccountFormDB = Account.builder().id(userId).amount(BigDecimal.valueOf(1000)).build();
+        Account storeAccountFormDB = Account.builder().id(storeAccountId).amount(BigDecimal.valueOf(1000)).build();
+        when(accountRepository.find(userId)).thenReturn(myAccountFormDB);
+        when(accountRepository.find(storeAccountId)).thenReturn(storeAccountFormDB);
+        when(bizSafeService.checkBizSafe(userId, storeAccountId, transferAmount)).thenReturn(false);
+
+        assertThrows(InvalidOperException.class, () -> paymentService.pay(userId, storeAccountId, transferAmount));
+        // then
+        assertAll(
+                () -> verify(accountRepository, times(1)).find(userId),
+                () -> verify(accountRepository, times(1)).find(storeAccountId),
+                () -> assertDoesNotThrow(() -> NoMoneyException.class),
                 () -> verify(accountTransferService, times(0)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
                 () -> verify(accountRepository, times(0)).save(myAccountFormDB),
                 () -> verify(accountRepository, times(0)).save(storeAccountFormDB)
