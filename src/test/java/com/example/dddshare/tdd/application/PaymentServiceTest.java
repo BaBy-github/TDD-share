@@ -54,6 +54,7 @@ class PaymentServiceTest {
                 () -> assertThat(result).isEqualTo(true),
                 () -> verify(accountRepository, times(1)).find(userId),
                 () -> verify(accountRepository, times(1)).find(storeAccountId),
+                () -> assertDoesNotThrow(() -> NoMoneyException.class),
                 () -> verify(accountTransferService, times(1)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
                 () -> verify(accountRepository, times(1)).save(myAccountFormDB),
                 () -> verify(accountRepository, times(1)).save(storeAccountFormDB)
@@ -83,7 +84,10 @@ class PaymentServiceTest {
         // then
         assertAll(
                 () -> verify(accountRepository, times(1)).find(userId),
-                () -> verify(accountRepository, times(1)).find(storeAccountId)
+                () -> verify(accountRepository, times(1)).find(storeAccountId),
+                () -> verify(accountTransferService, times(0)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
+                () -> verify(accountRepository, times(0)).save(myAccountFormDB),
+                () -> verify(accountRepository, times(0)).save(storeAccountFormDB)
         );
     }
 }
