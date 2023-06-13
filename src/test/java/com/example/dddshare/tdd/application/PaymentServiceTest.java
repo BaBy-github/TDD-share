@@ -8,7 +8,7 @@ import com.example.dddshare.tdd.domain.AccountTransferService;
 import com.example.dddshare.tdd.infrastructure.audit.AuditMessage;
 import com.example.dddshare.tdd.infrastructure.audit.AuditMessageProducer;
 import com.example.dddshare.tdd.infrastructure.persistent.AccountRepository;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -33,22 +33,44 @@ class PaymentServiceTest {
     @Mock
     private AuditMessageProducer auditMessageProducer;
 
+    private String userId;
+    private String storeAccountId;
+    private BigDecimal transferAmount;
+    private BigDecimal myAccountOriginalAmount;
+    private BigDecimal storeAccountOriginalAmount;
+    private Account myAccountFormDB;
+    private Account storeAccountFormDB;
+
+    @BeforeEach
+    public void beforeEach() {
+        userId = "1";
+        storeAccountId = "2";
+        transferAmount = BigDecimal.valueOf(300);
+        myAccountOriginalAmount = BigDecimal.valueOf(1000);
+        storeAccountOriginalAmount = BigDecimal.valueOf(1000);
+        myAccountFormDB = Account.builder()
+                .id(userId)
+                .amount(myAccountOriginalAmount)
+                .build();
+        storeAccountFormDB = Account.builder()
+                .id(storeAccountId)
+                .amount(storeAccountOriginalAmount)
+                .build();
+    }
+
+    @AfterEach
+    public void afterEach() {
+        userId = "";
+        storeAccountId = "";
+        transferAmount = null;
+        myAccountFormDB = null;
+        storeAccountFormDB = null;
+    }
+
     @Test
     void shouldReturnTrue_whenTransferSuccess_givenUserIdAndStoreAccountIdAndAmount() throws InvalidOperException, NoMoneyException {
         // given
-        String userId = "1";
-        String storeAccountId = "2";
-        BigDecimal transferAmount = BigDecimal.valueOf(300);
-
         // when
-        Account myAccountFormDB = Account.builder()
-                .id(userId)
-                .amount(BigDecimal.valueOf(1000))
-                .build();
-        Account storeAccountFormDB = Account.builder()
-                .id(storeAccountId)
-                .amount(BigDecimal.valueOf(1000))
-                .build();
         when(accountRepository.find(userId)).thenReturn(myAccountFormDB);
         when(accountRepository.find(storeAccountId)).thenReturn(storeAccountFormDB);
         // Mock void method
@@ -73,19 +95,9 @@ class PaymentServiceTest {
     @Test
     void shouldThrowNoMoneyException_whenTransfer_givenUserAccountNotEnoughMoney() {
         // given
-        String userId = "1";
-        String storeAccountId = "2";
-        BigDecimal transferAmount = BigDecimal.valueOf(300);
+        myAccountFormDB.setAmount(BigDecimal.valueOf(0));
 
         // when
-        Account myAccountFormDB = Account.builder()
-                .id(userId)
-                .amount(BigDecimal.valueOf(0))
-                .build();
-        Account storeAccountFormDB = Account.builder()
-                .id(storeAccountId)
-                .amount(BigDecimal.valueOf(1000))
-                .build();
         when(accountRepository.find(userId)).thenReturn(myAccountFormDB);
         when(accountRepository.find(storeAccountId)).thenReturn(storeAccountFormDB);
 
@@ -105,13 +117,7 @@ class PaymentServiceTest {
     @Test
     void shouldThrowInvalidOperException_whenTransferNotSafe_givenUserAccountNotEnoughMoney() throws InvalidOperException, NoMoneyException {
         // given
-        String userId = "1";
-        String storeAccountId = "2";
-        BigDecimal transferAmount = BigDecimal.valueOf(300);
-
         // when
-        Account myAccountFormDB = Account.builder().id(userId).amount(BigDecimal.valueOf(1000)).build();
-        Account storeAccountFormDB = Account.builder().id(storeAccountId).amount(BigDecimal.valueOf(1000)).build();
         when(accountRepository.find(userId)).thenReturn(myAccountFormDB);
         when(accountRepository.find(storeAccountId)).thenReturn(storeAccountFormDB);
         when(bizSafeService.checkBizSafe(userId, storeAccountId, transferAmount)).thenReturn(false);
