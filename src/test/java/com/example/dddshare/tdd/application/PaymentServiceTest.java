@@ -10,11 +10,15 @@ import com.example.dddshare.tdd.infrastructure.audit.AuditMessageProducer;
 import com.example.dddshare.tdd.infrastructure.persistent.AccountRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,6 +36,8 @@ class PaymentServiceTest {
     private BizSafeService bizSafeService;
     @Mock
     private AuditMessageProducer auditMessageProducer;
+    @Captor // 参数捕获器
+    ArgumentCaptor<Account> accountArgumentCaptor;
 
     private String userId;
     private String storeAccountId;
@@ -74,7 +80,7 @@ class PaymentServiceTest {
         when(accountRepository.find(userId)).thenReturn(myAccountFormDB);
         when(accountRepository.find(storeAccountId)).thenReturn(storeAccountFormDB);
         // Mock void method
-        doNothing().when(accountTransferService).transfer(myAccountFormDB, storeAccountFormDB, transferAmount);
+        doCallRealMethod().when(accountTransferService).transfer(myAccountFormDB, storeAccountFormDB, transferAmount);
         when(bizSafeService.checkBizSafe(userId, storeAccountId, transferAmount)).thenReturn(true);
         when(auditMessageProducer.send(any())).thenReturn(true);
 
@@ -86,8 +92,18 @@ class PaymentServiceTest {
                 () -> verify(accountRepository, times(1)).find(storeAccountId),
                 () -> assertDoesNotThrow(() -> NoMoneyException.class),
                 () -> verify(accountTransferService, times(1)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
-                () -> verify(accountRepository, times(1)).save(myAccountFormDB),
-                () -> verify(accountRepository, times(1)).save(storeAccountFormDB),
+                () -> {
+                    verify(accountRepository, times(2)).save(accountArgumentCaptor.capture());
+                    List<Account> accountRepositorySaveArguments = accountArgumentCaptor.getAllValues();
+                    accountRepositorySaveArguments.stream()
+                            .filter(account -> Objects.equals(account.getId(), userId))
+                            .findFirst()
+                            .ifPresent(myAccount -> assertThat(myAccount.getAmount()).isEqualTo(myAccountOriginalAmount.subtract(transferAmount)));
+                    accountRepositorySaveArguments.stream()
+                            .filter(account -> Objects.equals(account.getId(), storeAccountId))
+                            .findFirst()
+                            .ifPresent(storeAccount -> assertThat(storeAccount.getAmount()).isEqualTo(storeAccountOriginalAmount.add(transferAmount)));
+                },
                 () -> verify(auditMessageProducer, times(1)).send(isA(AuditMessage.class))
         );
     }
