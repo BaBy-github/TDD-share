@@ -1,5 +1,6 @@
 package com.example.dddshare.tdd.application;
 
+import com.example.dddshare.tdd.acl.BizSafeService;
 import com.example.dddshare.tdd.common.exception.InvalidOperException;
 import com.example.dddshare.tdd.common.exception.NoMoneyException;
 import com.example.dddshare.tdd.domain.Account;
@@ -14,9 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class) // 自动初始化@Mock注释的对象
@@ -58,6 +57,33 @@ class PaymentServiceTest {
                 () -> verify(accountTransferService, times(1)).transfer(myAccountFormDB, storeAccountFormDB, transferAmount),
                 () -> verify(accountRepository, times(1)).save(myAccountFormDB),
                 () -> verify(accountRepository, times(1)).save(storeAccountFormDB)
+        );
+    }
+
+    @Test
+    void shouldThrowNoMoneyException_whenTransfer_givenUserAccountNotEnoughMoney() {
+        // given
+        String userId = "1";
+        String storeAccountId = "2";
+        BigDecimal transferAmount = BigDecimal.valueOf(300);
+
+        // when
+        Account myAccountFormDB = Account.builder()
+                .id(userId)
+                .amount(BigDecimal.valueOf(0))
+                .build();
+        Account storeAccountFormDB = Account.builder()
+                .id(storeAccountId)
+                .amount(BigDecimal.valueOf(1000))
+                .build();
+        when(accountRepository.find(userId)).thenReturn(myAccountFormDB);
+        when(accountRepository.find(storeAccountId)).thenReturn(storeAccountFormDB);
+
+        assertThrows(NoMoneyException.class, () -> paymentService.pay(userId, storeAccountId, transferAmount));
+        // then
+        assertAll(
+                () -> verify(accountRepository, times(1)).find(userId),
+                () -> verify(accountRepository, times(1)).find(storeAccountId)
         );
     }
 }
