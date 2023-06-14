@@ -130,7 +130,7 @@ class PaymentServiceTest {
     }
 
     @Test
-    void shouldThrowInvalidOperException_whenTransferNotSafe_givenUserAccountNotEnoughMoney() throws InvalidOperException, NoMoneyException {
+    void shouldThrowInvalidOperException_whenTransferNotSafe_givenUserIdAndStoreAccountIdAndAmount() throws InvalidOperException, NoMoneyException {
         // given
         // when
         when(accountRepository.find(userId)).thenReturn(myAccountFormDB);
